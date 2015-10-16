@@ -16,7 +16,7 @@ import IO.Runner
 
 allTests : Test
 allTests =
-  suite "Collision" []                
+  suite "Test Suite" []
 
         
 port requests : Signal IO.Runner.Request
