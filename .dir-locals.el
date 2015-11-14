@@ -1,1 +1,1 @@
-((nil . ((compile-command . "cd ~/elm-template; test/run.sh"))))
+((nil . ((compile-command . "cd ~/spells; test/run.sh"))))
