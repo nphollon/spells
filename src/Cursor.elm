@@ -1,29 +1,46 @@
+module Cursor (main, cursor) where
+
 import Graphics.Element exposing (..)
 import Graphics.Collage exposing (..)
 import Mouse
+
+import Math.Vector2 as Vec2 exposing (Vec2)
 
 import Queue exposing (Queue)
 
 
 main : Signal Element
 main =
-  Signal.foldp update init inputs
-  |> Signal.map view
+  Signal.map view cursor
 
 
-type alias Vector =
-  { x : Float, y : Float }
+cursor : Signal Cursor
+cursor =
+  let
+    toCursor model =
+      { position = model.head
+      , direction = Vec2.direction model.head model.tail
+      }
+  in
+    Signal.foldp update init inputs
+      |> Signal.map toCursor
 
-  
+
 type alias Inputs =
   (Int, Int)
   
 
 type alias Model =
-  { head : Vector
-  , tail : Vector
-  , path : Queue Vector
+  { head : Vec2
+  , tail : Vec2
+  , path : Queue Vec2
   , minLength : Int
+  }
+
+                 
+type alias Cursor =
+  { position : Vec2
+  , direction : Vec2
   }
 
                  
@@ -33,7 +50,7 @@ update position model =
     head =
       { x = toFloat (fst position - width//2)
       , y = toFloat (height//2 - snd position)
-      }
+      } |> Vec2.fromRecord
 
     pathWithPush =
       Queue.push head model.path
@@ -56,10 +73,10 @@ update position model =
 
 init : Model
 init =
-  { head = { x = 0, y = 0 }
-  , tail = { x = 0, y = 0 }
+  { head = Vec2.vec2 0 0
+  , tail = Vec2.vec2 0 0
   , path = Queue.empty
-  , minLength = 10
+  , minLength = 20
   }
 
 
@@ -67,50 +84,20 @@ inputs : Signal Inputs
 inputs = Mouse.position
 
 
-view : Model -> Element
+view : Cursor -> Element
 view model =
   collage width height [ mouseline model ]
 
          
-mouseline : Model -> Form
-mouseline model =
+mouseline : Cursor -> Form
+mouseline cursor =
   let
-    point { x, y } =
-      (x, y)
+    tail =
+      Vec2.add cursor.position
+          (Vec2.scale -50 cursor.direction)
   in
-    traced defaultLine (segment (point model.tail) (point model.head))
-
-
-unitVector : Vector -> Vector
-unitVector { x, y } =
-  let
-    magnitude =
-      sqrt (x^2 + y^2)
-  in
-    { x = x / magnitude
-    , y = y / magnitude
-    }
-
-
-subtract : Vector -> Vector -> Vector
-subtract u v =
-  { x = u.x - v.x
-  , y = u.y - v.y
-  }
-
-
-add : Vector -> Vector -> Vector
-add u v =
-  { x = u.x + v.x
-  , y = u.y + v.y
-  }
-
-
-scale : Float -> Vector -> Vector
-scale n v =
-  { x = v.x * n
-  , y = v.y * n
-  }
+    segment (Vec2.toTuple tail) (Vec2.toTuple cursor.position)
+      |> traced defaultLine
 
 
 width : Int
