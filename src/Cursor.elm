@@ -9,20 +9,31 @@ import Math.Vector2 as Vec2 exposing (Vec2)
 import Queue exposing (Queue)
 
 
+width : Int
+width = 500
+
+        
+height : Int
+height = 500
+         
+
 main : Signal Element
 main =
-  Signal.map view cursor
+  Signal.map view (cursor (width, height))
 
 
-cursor : Signal Cursor
-cursor =
+cursor : (Int, Int) -> Signal Cursor
+cursor frameSize =
   let
     toCursor model =
       { position = model.head
       , direction = Vec2.direction model.head model.tail
       }
+
+    origin =
+      Vec2.scale 0.5 (toModelSpace frameSize)
   in
-    Signal.foldp update init inputs
+    Signal.foldp (update origin) init inputs
       |> Signal.map toCursor
 
 
@@ -44,14 +55,12 @@ type alias Cursor =
   }
 
                  
-update : Inputs -> Model -> Model
-update position model =
+update : Vec2 -> Inputs -> Model -> Model
+update origin position model =
   let
     head =
-      { x = toFloat (fst position - width//2)
-      , y = toFloat (height//2 - snd position)
-      } |> Vec2.fromRecord
-
+      Vec2.sub (toModelSpace position) origin
+        
     pathWithPush =
       Queue.push head model.path
     
@@ -71,6 +80,13 @@ update position model =
     }
   
 
+toModelSpace : (Int, Int) -> Vec2
+toModelSpace screen =
+  Vec2.vec2
+      (toFloat (fst screen))
+      (toFloat (negate (snd screen)))
+      
+  
 init : Model
 init =
   { head = Vec2.vec2 0 0
@@ -98,12 +114,3 @@ mouseline cursor =
   in
     segment (Vec2.toTuple tail) (Vec2.toTuple cursor.position)
       |> traced defaultLine
-
-
-width : Int
-width = 500
-
-        
-height : Int
-height = 500
-         
