@@ -15,30 +15,52 @@ import Cursor exposing (Cursor)
 
 main : Signal Element.Element
 main =
+  Signal.foldp update init inputs
+    |> Signal.map view
+
+
+update : Update -> Model -> Model
+update input model =
+  case input of
+    FPS dt ->
+      TimeEvolution.rungeKutta laws dt model
+
+    MouseAt cursor ->
+      model
+
+
+inputs : Signal Update
+inputs =
   let
-    limit =
-      Time.second * 0.25
-
     fps =
-      Time.fps 40
-          
-    env =
-      Signal.map buildEnv (Cursor.cursor (400, 400))
+      Signal.filter
+              (\dt -> dt < Time.second * 0.25)
+              0
+              (Time.fps 40)
+
+    cursor =
+      Cursor.cursor (400, 400)
   in
-    TimeEvolution.externals limit fps env
-      |> TimeEvolution.evolve laws init
-      |> Signal.map2 view env
+    Signal.merge
+          (Signal.map FPS fps)
+          (Signal.map MouseAt cursor)
+
+          
+type Update =
+  FPS Time | MouseAt Cursor
 
 
-type alias Env =
-  { terrain : Bicubic.Spline
+type alias Model =
+  { position : Vector
+  , momentum : Vector
+  , terrain : Bicubic.Spline
   , mass : Float
   , g : Float
   }
                
   
-buildEnv : Cursor -> Env
-buildEnv cursor =
+init : Model
+init =
   let
     data =
       [ [ 5, 5, 5, 5, 5 ]
@@ -58,57 +80,46 @@ buildEnv cursor =
   in
     { terrain = Bicubic.withRange start end data
     , mass = 1
-    , g = 1000
+    , g = -1000
+    , position = { x = 100, y = -100 }
+    , momentum = { x = 0, y = 0 }
     }
 
 
-type alias Model =
-  { position : Vector
-  , momentum : Vector
-  }
-
-
-init : Model
-init =
-  { position = { x = 100, y = -100 }
-  , momentum = { x = 0, y = 0 }
-  }
-
-
-laws : TimeEvolution.Laws Model Env
+laws : TimeEvolution.Laws Model
 laws =
   { add a b =
-      { position = pointMap2 (+) a.position b.position
-      , momentum = pointMap2 (+) a.momentum b.momentum
+      { a | position <- pointMap2 (+) a.position b.position
+          , momentum <- pointMap2 (+) a.momentum b.momentum
       }
     
   , scale f a =
-      { position = pointMap ((*) f) a.position
-      , momentum = pointMap ((*) f) a.momentum
+      { a | position <- pointMap ((*) f) a.position
+          , momentum <- pointMap ((*) f) a.momentum
       }
     
-  , force env model =
+  , force model =
       let
         gradient =
-          Bicubic.gradientAt model.position env.terrain
+          Bicubic.gradientAt model.position model.terrain
 
         discr =
           sqrt (1 + gradient.x^2 + gradient.y^2)
 
         changePos p =
-          p / env.mass / discr
+          p / model.mass / discr
 
         changeMom s =
-          negate env.mass * env.g * s / discr
+          model.mass * model.g * s / discr
       in
-        { position = pointMap changePos model.momentum
-        , momentum = pointMap changeMom gradient
+        { model | position <- pointMap changePos model.momentum
+                , momentum <- pointMap changeMom gradient
         }
   }
 
       
-view : Env -> Model -> Element.Element
-view env model =
+view : Model -> Element.Element
+view model =
   let
     size =
       { x = 400, y = 400 }
@@ -118,7 +129,7 @@ view env model =
 
     point pos =
       Collage.rect 20 20
-        |> Collage.filled (colorOf pos env.terrain)
+        |> Collage.filled (colorOf pos model.terrain)
         |> Collage.move (pos.x, pos.y)
 
     points =
