@@ -1,4 +1,4 @@
-module Cursor (main, cursor) where
+module Cursor (Cursor, main, cursor) where
 
 import Graphics.Element exposing (..)
 import Graphics.Collage exposing (..)

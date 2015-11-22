@@ -8,16 +8,26 @@ import Time exposing (Time)
 
 import Interpolate.Bicubic as Bicubic
 import TimeEvolution
+import Math.Vector2 as Vec2 exposing (Vec2)
+
+import Cursor exposing (Cursor)
 
 
 main : Signal Element.Element
 main =
-  { deltas = Time.fps 30
-  , env = Signal.constant env
-  }
-     |> TimeEvolution.limit (Time.second * 0.25)
-     |> TimeEvolution.evolve laws init
-     |> Signal.map (view env)
+  let
+    limit =
+      Time.second * 0.25
+
+    fps =
+      Time.fps 40
+          
+    env =
+      Signal.map buildEnv (Cursor.cursor (400, 400))
+  in
+    TimeEvolution.externals limit fps env
+      |> TimeEvolution.evolve laws init
+      |> Signal.map2 view env
 
 
 type alias Env =
@@ -27,8 +37,8 @@ type alias Env =
   }
                
   
-env : Env
-env =
+buildEnv : Cursor -> Env
+buildEnv cursor =
   let
     data =
       [ [ 5, 5, 5, 5, 5 ]
