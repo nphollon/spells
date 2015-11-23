@@ -4,29 +4,26 @@ import Array exposing (Array)
 import Color exposing (Color)
 import Graphics.Element as Element
 import Graphics.Collage as Collage
-import Time exposing (Time)
 
-import Interpolate.Bicubic as Bicubic
+import Time exposing (Time)
+import Mouse
+
+import Update exposing (..)
+import Interpolate.Bicubic as Bicubic exposing (Vector)
 import TimeEvolution
 import Math.Vector2 as Vec2 exposing (Vec2)
 
-import Cursor exposing (Cursor)
+
+type alias Model =
+  { mode : Mode
+  , data : Data
+  }
 
 
 main : Signal Element.Element
 main =
   Signal.foldp update init inputs
     |> Signal.map view
-
-
-update : Update -> Model -> Model
-update input model =
-  case input of
-    FPS dt ->
-      TimeEvolution.rungeKutta laws dt model
-
-    MouseAt cursor ->
-      model
 
 
 inputs : Signal Update
@@ -37,30 +34,21 @@ inputs =
               (\dt -> dt < Time.second * 0.25)
               0
               (Time.fps 40)
-
-    cursor =
-      Cursor.cursor (400, 400)
   in
     Signal.merge
           (Signal.map FPS fps)
-          (Signal.map MouseAt cursor)
-
-          
-type Update =
-  FPS Time | MouseAt Cursor
-
-
-type alias Model =
-  { position : Vector
-  , momentum : Vector
-  , terrain : Bicubic.Spline
-  , mass : Float
-  , g : Float
-  }
+          (Signal.map MouseAt Mouse.position)
                
-  
+
 init : Model
 init =
+  { mode = Firing
+  , data = initData
+  }
+
+          
+initData : Data
+initData =
   let
     data =
       [ [ 5, 5, 5, 5, 5 ]
@@ -86,7 +74,58 @@ init =
     }
 
 
-laws : TimeEvolution.Laws Model
+update : Update -> Model -> Model
+update up model =
+  let
+    engine =
+      chooseEngine model.mode
+
+    data =
+      engine.update up model.data
+
+    transition =
+      engine.transition data
+  in
+    case transition of
+      Nothing ->
+        { model | data <- data }
+
+      Just mode ->
+        { mode = mode
+        , data = .init (chooseEngine mode) data
+        }
+
+
+view : Model -> Element.Element
+view model =
+  case model.mode of
+    Aiming -> firingView model.data
+    Firing -> firingView model.data
+
+
+chooseEngine : Mode -> Engine
+chooseEngine mode =
+  let
+    tick input =
+      case input of
+        FPS dt ->
+          TimeEvolution.rungeKutta laws dt
+
+        MouseAt _ ->
+          identity
+          
+    firingEngine =
+      { init = identity
+      , update = tick
+      , transition = always Nothing
+      }
+  in
+    case mode of
+      Aiming -> firingEngine
+      Firing -> firingEngine
+              
+      
+laws : TimeEvolution.Laws Data
 laws =
   { add a b =
       { a | position <- pointMap2 (+) a.position b.position
@@ -118,8 +157,8 @@ laws =
   }
 
       
-view : Model -> Element.Element
-view model =
+firingView : Data -> Element.Element
+firingView model =
   let
     size =
       { x = 400, y = 400 }
@@ -180,6 +219,3 @@ pointMap2 f a b =
   { x = f a.x b.x
   , y = f a.y b.y
   }
-
-type alias Vector =
-  Bicubic.Vector
