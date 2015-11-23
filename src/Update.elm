@@ -1,7 +1,8 @@
 module Update where
 
 import Time exposing (Time)
-import Interpolate.Bicubic exposing (Spline, Vector)
+import Interpolate.Bicubic exposing (Spline)
+import Math.Vector2 exposing (Vec2)
 
 
 type Update =
@@ -13,8 +14,8 @@ type Mode =
 
 
 type alias Data =
-  { position : Vector
-  , momentum : Vector
+  { position : Vec2
+  , momentum : Vec2
   , terrain : Spline
   , mass : Float
   , g : Float

@@ -9,7 +9,7 @@ import Time exposing (Time)
 import Mouse
 
 import Update exposing (..)
-import Interpolate.Bicubic as Bicubic exposing (Vector)
+import Interpolate.Bicubic as Bicubic
 import TimeEvolution
 import Math.Vector2 as Vec2 exposing (Vec2)
 
@@ -69,8 +69,8 @@ initData =
     { terrain = Bicubic.withRange start end data
     , mass = 1
     , g = -1000
-    , position = { x = 100, y = -100 }
-    , momentum = { x = 0, y = 0 }
+    , position = Vec2.vec2 100 -100
+    , momentum = Vec2.vec2 0 0
     }
 
 
@@ -128,31 +128,29 @@ chooseEngine mode =
 laws : TimeEvolution.Laws Data
 laws =
   { add a b =
-      { a | position <- pointMap2 (+) a.position b.position
-          , momentum <- pointMap2 (+) a.momentum b.momentum
+      { a | position <- Vec2.add a.position b.position
+          , momentum <- Vec2.add a.momentum b.momentum
       }
     
   , scale f a =
-      { a | position <- pointMap ((*) f) a.position
-          , momentum <- pointMap ((*) f) a.momentum
+      { a | position <- Vec2.scale f a.position
+          , momentum <- Vec2.scale f a.momentum
       }
-    
+
   , force model =
       let
         gradient =
-          Bicubic.gradientAt model.position model.terrain
+          Bicubic.gradientAt (Vec2.toRecord model.position) model.terrain
+            |> Vec2.fromRecord
 
         discr =
-          sqrt (1 + gradient.x^2 + gradient.y^2)
+          1 / sqrt (1 + Vec2.lengthSquared gradient)
 
-        changePos p =
-          p / model.mass / discr
-
-        changeMom s =
-          model.mass * model.g * s / discr
       in
-        { model | position <- pointMap changePos model.momentum
-                , momentum <- pointMap changeMom gradient
+        { model | position <-
+                    Vec2.scale (discr / model.mass) model.momentum
+                , momentum <-
+                    Vec2.scale (model.mass * model.g * discr) gradient
         }
   }
 
@@ -161,15 +159,15 @@ firingView : Data -> Element.Element
 firingView model =
   let
     size =
-      { x = 400, y = 400 }
+      Vec2.vec2 400 400
 
     resolution =
-      { x = 20, y = 20 }
+      Vec2.vec2 20 20
 
     point pos =
       Collage.rect 20 20
         |> Collage.filled (colorOf pos model.terrain)
-        |> Collage.move (pos.x, pos.y)
+        |> Collage.move (Vec2.toTuple pos)
 
     points =
       gridInit point size resolution
@@ -178,44 +176,36 @@ firingView model =
     ball =
       Collage.circle 5
         |> Collage.filled Color.red
-        |> Collage.move (model.position.x, model.position.y)
+        |> Collage.move (Vec2.toTuple model.position)
   in
     Collage.collage 500 500 [ points, ball ]
 
 
-gridInit : (Vector -> a) -> Vector -> Vector -> List a
-gridInit f size resolution =
+gridInit : (Vec2 -> a) -> Vec2 -> Vec2 -> List a
+gridInit transform size resolution =
   let
-    toCoords index =
-      pointMap2 (\i n -> i/n - 0.5) index resolution
-        |> pointMap2 (*) size
+    (resX, resY) =
+      Vec2.toTuple resolution
+
+    (scrX, scrY) =
+      Vec2.toTuple size
+          
+    toCoord index arrayLength screenLength =
+      ((toFloat index) / arrayLength - 0.5) * screenLength
       
     item j i =
-      f (toCoords { x = toFloat i, y = toFloat j })
+      Vec2.vec2 (toCoord i resX scrX) (toCoord j resY scrY)
+        |> transform
   in
-    (\j -> Array.initialize (round resolution.x) (item j))
-    |> Array.initialize (round resolution.y)
+    (\j -> Array.initialize (round resX) (item j))
+    |> Array.initialize (round resY)
     |> Array.map Array.toList
     |> Array.toList
     |> List.concat
 
 
-colorOf : Vector -> Bicubic.Spline -> Color
+colorOf : Vec2 -> Bicubic.Spline -> Color
 colorOf v spline =
-  Bicubic.valueAt v spline
+  Bicubic.valueAt (Vec2.toRecord v) spline
     |> (\f -> (7 - f) / 7)
     |> Color.grayscale
-
-
-pointMap : (a -> b) -> {x:a,y:a} -> {x:b,y:b}
-pointMap f a =
-  { x = f a.x
-  , y = f a.y
-  }
-
-       
-pointMap2 : (a -> b -> c) -> {x:a,y:a} -> {x:b,y:b} -> {x:c,y:c}
-pointMap2 f a b =
-  { x = f a.x b.x
-  , y = f a.y b.y
-  }
