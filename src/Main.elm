@@ -99,7 +99,7 @@ update up model =
 view : Model -> Element.Element
 view model =
   case model.mode of
-    Aiming -> firingView model.data
+    Aiming -> aimingView model.data
     Firing -> firingView model.data
 
 
@@ -154,7 +154,11 @@ laws =
         }
   }
 
-      
+
+aimingView : Data -> Element.Element
+aimingView = firingView
+
+             
 firingView : Data -> Element.Element
 firingView model =
   let
@@ -162,16 +166,10 @@ firingView model =
       Vec2.vec2 400 400
 
     resolution =
-      Vec2.vec2 20 20
-
-    point pos =
-      Collage.rect 20 20
-        |> Collage.filled (colorOf pos model.terrain)
-        |> Collage.move (Vec2.toTuple pos)
+      Vec2.vec2 12 12
 
     points =
-      gridInit point size resolution
-        |> Collage.group
+      grid size resolution model.terrain
 
     ball =
       Collage.circle 5
@@ -181,8 +179,8 @@ firingView model =
     Collage.collage 500 500 [ points, ball ]
 
 
-gridInit : (Vec2 -> a) -> Vec2 -> Vec2 -> List a
-gridInit transform size resolution =
+grid : Vec2 -> Vec2 -> Bicubic.Spline -> Collage.Form
+grid size resolution terrain =
   let
     (resX, resY) =
       Vec2.toTuple resolution
@@ -193,19 +191,33 @@ gridInit transform size resolution =
     toCoord index arrayLength screenLength =
       ((toFloat index) / arrayLength - 0.5) * screenLength
       
-    item j i =
+    pos i j =
       Vec2.vec2 (toCoord i resX scrX) (toCoord j resY scrY)
-        |> transform
+
+    gradient pos =
+      Color.radial (0,0) 7 (0,0) (1 * scrX / resX)
+             [ (0, Color.hsla 0 0 (level pos terrain) 1)
+             , (1, Color.hsla 0 0 (level pos terrain) 0)
+             ]
+
+    point pos =
+      Collage.rect (2 * scrX / resX) (2 * scrY / resY)
+        |> Collage.gradient (gradient pos)
+        |> Collage.move (Vec2.toTuple pos)
+
+    flatten =
+      Array.map Array.toList >> Array.toList >> List.concat
+
+    initialize2D m n f =
+      Array.initialize m (\i -> Array.initialize n (f i))
+           
   in
-    (\j -> Array.initialize (round resX) (item j))
-    |> Array.initialize (round resY)
-    |> Array.map Array.toList
-    |> Array.toList
-    |> List.concat
+    initialize2D (round resX) (round resY) (\i j -> point (pos i j))
+    |> flatten
+    |> Collage.group
+    
 
-
-colorOf : Vec2 -> Bicubic.Spline -> Color
-colorOf v spline =
+level : Vec2 -> Bicubic.Spline -> Float
+level v spline =
   Bicubic.valueAt (Vec2.toRecord v) spline
-    |> (\f -> (7 - f) / 7)
-    |> Color.grayscale
+    |> (\f -> f / 7)
