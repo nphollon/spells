@@ -6,7 +6,7 @@ import Math.Vector2 exposing (Vec2)
 
 
 type Update =
-  FPS Time | MouseAt (Int, Int)
+  FPS Time | MouseAt (Int, Int) | Click
 
 
 type Mode =
@@ -19,6 +19,7 @@ type alias Data =
   , terrain : Spline
   , mass : Float
   , g : Float
+  , continue : Bool
   }
 
 

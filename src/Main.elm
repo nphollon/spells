@@ -35,9 +35,12 @@ inputs =
               0
               (Time.fps 40)
   in
-    Signal.merge
-          (Signal.map FPS fps)
-          (Signal.map MouseAt Mouse.position)
+    Signal.mergeMany
+          [ Signal.map FPS fps
+          , Signal.map MouseAt Mouse.position
+          , Signal.map (always Click) Mouse.clicks
+          ]
+          
                
 
 init : Model
@@ -71,6 +74,7 @@ initData =
     , g = -1000
     , position = Vec2.vec2 100 -100
     , momentum = Vec2.vec2 0 0
+    , continue = False
     }
 
 
@@ -105,7 +109,8 @@ chooseEngine mode =
 
 aimingEngine : Engine
 aimingEngine =
-  { init = identity
+  { init data =
+      { data | continue <- False }
            
   , update input data =
       case input of
@@ -115,23 +120,34 @@ aimingEngine =
         MouseAt (x, y) ->
           { data | position <- Vec2.vec2 (toFloat x - 250) (250 - toFloat y) }
 
-  , transition = always Nothing
+        Click ->
+          { data | continue <- True }
+
+  , transition data =
+      if data.continue then Just Firing else Nothing
   }
                
 
 firingEngine : Engine
 firingEngine =
-  { init = identity
+  { init data =
+      { data | continue <- False
+             , momentum <- Vec2.vec2 0 0
+      }
            
-  , update input =
+  , update input data =
       case input of
         FPS dt ->
-          TimeEvolution.rungeKutta laws dt
+          TimeEvolution.rungeKutta laws dt data
 
         MouseAt _ ->
-          identity
+          data
 
-  , transition = always Nothing
+        Click ->
+          { data | continue <- True }
+
+  , transition data =
+      if data.continue then Just Aiming else Nothing
   }
 
 
