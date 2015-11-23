@@ -42,7 +42,7 @@ inputs =
 
 init : Model
 init =
-  { mode = Firing
+  { mode = Aiming
   , data = initData
   }
 
@@ -96,35 +96,45 @@ update up model =
         }
 
 
-view : Model -> Element.Element
-view model =
-  case model.mode of
-    Aiming -> aimingView model.data
-    Firing -> firingView model.data
-
-
 chooseEngine : Mode -> Engine
 chooseEngine mode =
-  let
-    tick input =
+  case mode of
+    Aiming -> aimingEngine
+    Firing -> firingEngine
+
+
+aimingEngine : Engine
+aimingEngine =
+  { init = identity
+           
+  , update input data =
+      case input of
+        FPS _ ->
+          data
+          
+        MouseAt (x, y) ->
+          { data | position <- Vec2.vec2 (toFloat x - 250) (250 - toFloat y) }
+
+  , transition = always Nothing
+  }
+               
+
+firingEngine : Engine
+firingEngine =
+  { init = identity
+           
+  , update input =
       case input of
         FPS dt ->
           TimeEvolution.rungeKutta laws dt
 
         MouseAt _ ->
           identity
-          
-    firingEngine =
-      { init = identity
-      , update = tick
-      , transition = always Nothing
-      }
-  in
-    case mode of
-      Aiming -> firingEngine
-      Firing -> firingEngine
-              
-      
+
+  , transition = always Nothing
+  }
+
+
 laws : TimeEvolution.Laws Data
 laws =
   { add a b =
@@ -155,39 +165,49 @@ laws =
   }
 
 
+view : Model -> Element.Element
+view model =
+  case model.mode of
+    Aiming -> aimingView model.data
+    Firing -> firingView model.data
+
+
 aimingView : Data -> Element.Element
-aimingView = firingView
+aimingView data =
+  let
+    crosshair =
+      [ (3, 0), (10, 10)
+      , (0, 3), (-10, 10)
+      , (-3, 0), (-10, -10)
+      , (0, -3), (10, -10)
+      ]
+         |> Collage.polygon
+         |> Collage.filled Color.yellow
+         |> Collage.move (Vec2.toTuple data.position)
+  in
+    onGrid data.terrain [ crosshair ]
 
              
 firingView : Data -> Element.Element
-firingView model =
+firingView data =
   let
-    size =
-      Vec2.vec2 400 400
-
-    resolution =
-      Vec2.vec2 12 12
-
-    points =
-      grid size resolution model.terrain
-
     ball =
       Collage.circle 5
         |> Collage.filled Color.red
-        |> Collage.move (Vec2.toTuple model.position)
+        |> Collage.move (Vec2.toTuple data.position)
   in
-    Collage.collage 500 500 [ points, ball ]
+    onGrid data.terrain [ ball ]
 
 
-grid : Vec2 -> Vec2 -> Bicubic.Spline -> Collage.Form
-grid size resolution terrain =
+onGrid : Bicubic.Spline -> List Collage.Form -> Element.Element
+onGrid terrain items =
   let
-    (resX, resY) =
-      Vec2.toTuple resolution
+    resX = 12
+    resY = 12
 
-    (scrX, scrY) =
-      Vec2.toTuple size
-          
+    scrX = 400
+    scrY = 400
+      
     toCoord index arrayLength screenLength =
       ((toFloat index) / arrayLength - 0.5) * screenLength
       
@@ -199,6 +219,10 @@ grid size resolution terrain =
              [ (0, Color.hsla 0 0 (level pos terrain) 1)
              , (1, Color.hsla 0 0 (level pos terrain) 0)
              ]
+
+    level pos spline =
+      Bicubic.valueAt (Vec2.toRecord pos) spline
+        |> (\f -> f / 7)
 
     point pos =
       Collage.rect (2 * scrX / resX) (2 * scrY / resY)
@@ -214,10 +238,6 @@ grid size resolution terrain =
   in
     initialize2D (round resX) (round resY) (\i j -> point (pos i j))
     |> flatten
-    |> Collage.group
+    |> flip List.append items
+    |> Collage.collage 500 500
     
-
-level : Vec2 -> Bicubic.Spline -> Float
-level v spline =
-  Bicubic.valueAt (Vec2.toRecord v) spline
-    |> (\f -> f / 7)
