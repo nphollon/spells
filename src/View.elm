@@ -6,7 +6,7 @@ import Graphics.Collage as Collage
 import Color
 
 import Interpolate.Bicubic as Bicubic
-
+import Collision2D
 import Math.Vector2 as Vec2 exposing (Vec2)
 
 import Types exposing (..)
@@ -25,12 +25,17 @@ readyView : Data -> Element
 readyView data =
   let
     position =
-      fromCursor data.cursor |> Vec2.toTuple
+      fromCursor data.cursor
+
+    cursor =
+      if Collision2D.isInside position data.launchZone
+      then crosshair
+      else stopSign
+        
   in
     onGrid data.terrain
              [ drawTokens data.tokens
-             , crosshair
-                 |> Collage.move position
+             , Collage.move (Vec2.toTuple position) cursor
              ]
 
 
@@ -139,3 +144,13 @@ drawTokens =
     in
       List.map drawToken >> Collage.group
 
+
+stopSign : Collage.Form
+stopSign =
+  [ (7, 3), (3, 7)
+  , (-3, 7), (-7, 3)
+  , (-7, -3), (-3, -7)
+  , (3, -7), (7, -3)
+  ]
+  |> Collage.polygon
+  |> Collage.filled Color.darkRed

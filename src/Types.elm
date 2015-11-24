@@ -3,6 +3,7 @@ module Types where
 import Time exposing (Time)
 import Interpolate.Bicubic exposing (Spline)
 import Math.Vector2 exposing (Vec2)
+import Collision2D exposing (Hull)
 
 
 type alias Model =
@@ -27,6 +28,7 @@ type alias Data =
   , g : Float
   , cursor : (Int, Int)
   , tokens : List Vec2
+  , launchZone : Hull
   , continue : Bool
   }
 

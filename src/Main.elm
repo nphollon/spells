@@ -6,6 +6,7 @@ import Mouse
 
 import Math.Vector2 as Vec2 exposing (Vec2)
 import Interpolate.Bicubic as Bicubic
+import Collision2D
 
 import Engine
 import View
@@ -59,6 +60,13 @@ initData =
 
     end =
       { x = 200, y = 200 }
+
+    launchZone =
+      [ Vec2.vec2 -250 250
+      , Vec2.vec2 -250 -250
+      , Vec2.vec2 0 0
+      ]
+         |> Collision2D.fromVectors
   in
     { terrain = Bicubic.withRange start end data
     , mass = 1
@@ -68,4 +76,5 @@ initData =
     , continue = False
     , cursor = (0, 0)
     , tokens = [ Vec2.vec2 170 -190, Vec2.vec2 30 30 ]
+    , launchZone = launchZone
     }
