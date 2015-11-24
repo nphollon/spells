@@ -10,7 +10,7 @@ type Update =
 
 
 type Mode =
-  Aiming | Firing
+  Ready | Aim | Fire
 
 
 type alias Data =

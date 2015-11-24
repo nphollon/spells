@@ -45,7 +45,7 @@ inputs =
 
 init : Model
 init =
-  { mode = Aiming
+  { mode = Ready
   , data = initData
   }
 
@@ -71,7 +71,7 @@ initData =
   in
     { terrain = Bicubic.withRange start end data
     , mass = 1
-    , g = -1000
+    , g = -5000
     , position = Vec2.vec2 100 -100
     , momentum = Vec2.vec2 0 0
     , continue = False
@@ -104,12 +104,13 @@ update up model =
 chooseEngine : Mode -> Engine
 chooseEngine mode =
   case mode of
-    Aiming -> aimingEngine
-    Firing -> firingEngine
+    Ready -> readyEngine
+    Aim -> aimEngine
+    Fire -> fireEngine
 
 
-aimingEngine : Engine
-aimingEngine =
+readyEngine : Engine
+readyEngine =
   { init data =
       { data | continue <- False
       }
@@ -126,16 +127,38 @@ aimingEngine =
           { data | continue <- True }
 
   , transition data =
-      if data.continue then Just Firing else Nothing
+      if data.continue then Just Aim else Nothing
   }
-               
 
-firingEngine : Engine
-firingEngine =
+
+aimEngine : Engine
+aimEngine =
   { init data =
       { data | continue <- False
              , position <- fromCursor data.cursor
-             , momentum <- Vec2.vec2 0 0
+      }
+
+  , update input data =
+      case input of
+        FPS _ ->
+          data
+
+        MouseAt cursor ->
+          { data | cursor <- cursor }
+
+        Click ->
+          { data | continue <- True }
+
+  , transition data =
+      if data.continue then Just Fire else Nothing
+  }
+               
+
+fireEngine : Engine
+fireEngine =
+  { init data =
+      { data | continue <- False
+             , momentum <- momentum data
       }
            
   , update input data =
@@ -150,7 +173,7 @@ firingEngine =
           { data | continue <- True }
 
   , transition data =
-      if data.continue then Just Aiming else Nothing
+      if data.continue then Just Ready else Nothing
   }
 
 
@@ -184,15 +207,22 @@ laws =
   }
 
 
+momentum : Data -> Vec2
+momentum data =
+  Vec2.direction (fromCursor data.cursor) data.position
+    |> Vec2.scale 100
+
+       
 view : Model -> Element.Element
 view model =
   case model.mode of
-    Aiming -> aimingView model.data
-    Firing -> firingView model.data
+    Ready -> readyView model.data
+    Aim -> aimView model.data
+    Fire -> fireView model.data
 
 
-aimingView : Data -> Element.Element
-aimingView data =
+readyView : Data -> Element.Element
+readyView data =
   let
     position =
       fromCursor data.cursor |> Vec2.toTuple
@@ -210,13 +240,34 @@ aimingView data =
     onGrid data.terrain [ crosshair ]
 
 
+aimView : Data -> Element.Element
+aimView data =
+  let
+    direction =
+      momentum data
+
+    angle =
+      atan2 (Vec2.getY direction) (Vec2.getX direction)
+            
+    pointer =
+      [ (0, 0), (-25, 3)
+      , (-30, 0), (-25, -3)
+      ]
+        |> Collage.polygon
+        |> Collage.filled Color.darkYellow
+        |> Collage.rotate angle
+        |> Collage.move (Vec2.toTuple data.position)
+  in
+    onGrid data.terrain [ pointer ]
+
+           
 fromCursor : (Int, Int) -> Vec2
 fromCursor (x, y) =
   Vec2.vec2 (toFloat x - 250) (250 - toFloat y)
 
              
-firingView : Data -> Element.Element
-firingView data =
+fireView : Data -> Element.Element
+fireView data =
   let
     ball =
       Collage.circle 5
