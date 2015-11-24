@@ -96,6 +96,7 @@ fireEngine =
       case input of
         FPS dt ->
           TimeEvolution.rungeKutta laws dt data
+            |> checkCollisions
 
         MouseAt cursor ->
           { data | cursor <- cursor }
@@ -136,3 +137,14 @@ laws =
                     Vec2.scale (model.mass * model.g * discr) gradient
         }
   }
+
+
+checkCollisions : Data -> Data
+checkCollisions data =
+  let
+    doesRemain token =
+      Vec2.distance data.position token > 10
+  in
+    { data | tokens <-
+             List.filter doesRemain data.tokens
+    }
