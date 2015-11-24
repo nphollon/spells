@@ -75,6 +75,7 @@ initData =
     , position = Vec2.vec2 100 -100
     , momentum = Vec2.vec2 0 0
     , continue = False
+    , cursor = (0, 0)
     }
 
 
@@ -110,15 +111,16 @@ chooseEngine mode =
 aimingEngine : Engine
 aimingEngine =
   { init data =
-      { data | continue <- False }
+      { data | continue <- False
+      }
            
   , update input data =
       case input of
         FPS _ ->
           data
           
-        MouseAt (x, y) ->
-          { data | position <- Vec2.vec2 (toFloat x - 250) (250 - toFloat y) }
+        MouseAt cursor ->
+          { data | cursor <- cursor }
 
         Click ->
           { data | continue <- True }
@@ -132,6 +134,7 @@ firingEngine : Engine
 firingEngine =
   { init data =
       { data | continue <- False
+             , position <- fromCursor data.cursor
              , momentum <- Vec2.vec2 0 0
       }
            
@@ -140,8 +143,8 @@ firingEngine =
         FPS dt ->
           TimeEvolution.rungeKutta laws dt data
 
-        MouseAt _ ->
-          data
+        MouseAt cursor ->
+          { data | cursor <- cursor }
 
         Click ->
           { data | continue <- True }
@@ -191,6 +194,9 @@ view model =
 aimingView : Data -> Element.Element
 aimingView data =
   let
+    position =
+      fromCursor data.cursor |> Vec2.toTuple
+      
     crosshair =
       [ (3, 0), (10, 10)
       , (0, 3), (-10, 10)
@@ -199,9 +205,14 @@ aimingView data =
       ]
          |> Collage.polygon
          |> Collage.filled Color.yellow
-         |> Collage.move (Vec2.toTuple data.position)
+         |> Collage.move position
   in
     onGrid data.terrain [ crosshair ]
+
+
+fromCursor : (Int, Int) -> Vec2
+fromCursor (x, y) =
+  Vec2.vec2 (toFloat x - 250) (250 - toFloat y)
 
              
 firingView : Data -> Element.Element

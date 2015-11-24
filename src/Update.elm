@@ -19,6 +19,7 @@ type alias Data =
   , terrain : Spline
   , mass : Float
   , g : Float
+  , cursor : (Int, Int)
   , continue : Bool
   }
 
