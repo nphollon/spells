@@ -56,7 +56,7 @@ readyEngine =
         Click ->
           { data | continue <-
                      Collision2D.isInside
-                                  (fromCursor data.cursor) data.launchZone
+                                  (fromCursor data.cursor) data.launchHull
           }
 
   , transition data =

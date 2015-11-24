@@ -21,15 +21,19 @@ type Mode =
 
 
 type alias Data =
-  { position : Vec2
-  , momentum : Vec2
-  , terrain : Spline
+  { continue : Bool
+
   , mass : Float
   , g : Float
+
+  , position : Vec2
+  , momentum : Vec2
   , cursor : (Int, Int)
+
+  , terrain : Spline
   , tokens : List Vec2
-  , launchZone : Hull
-  , continue : Bool
+  , launchHull : Hull
+  , launchZone : List Vec2
   }
 
 

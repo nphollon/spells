@@ -28,13 +28,13 @@ readyView data =
       fromCursor data.cursor
 
     cursor =
-      if Collision2D.isInside position data.launchZone
+      if Collision2D.isInside position data.launchHull
       then crosshair
       else stopSign
         
   in
     onGrid data.terrain
-             [ launchZone
+             [ launchZone data.launchZone
              , drawTokens data.tokens
              , Collage.move (Vec2.toTuple position) cursor
              ]
@@ -104,7 +104,7 @@ onGrid terrain items =
       Array.initialize m (\i -> Array.initialize n (f i))
            
   in
-    initialize2D (round resX) (round resY) (\i j -> point (pos i j))
+    initialize2D (1 + round resX) (1 + round resY) (\i j -> point (pos i j))
     |> flatten
     |> flip List.append items
     |> Collage.collage 500 500
@@ -158,8 +158,8 @@ stopSign =
   |> Collage.filled Color.darkRed
 
 
-launchZone : Collage.Form
-launchZone =
-  [ (-250, 250), (-250, -250), (0, 0) ]
+launchZone : List Vec2 -> Collage.Form
+launchZone vertexes =
+  List.map Vec2.toTuple vertexes
     |> Collage.polygon
     |> Collage.filled (Color.rgba 255 255 100 0.5)

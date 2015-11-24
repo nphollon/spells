@@ -62,11 +62,11 @@ initData =
       { x = 200, y = 200 }
 
     launchZone =
-      [ Vec2.vec2 -250 250
-      , Vec2.vec2 -250 -250
-      , Vec2.vec2 0 0
+      [ Vec2.vec2 180 -180
+      , Vec2.vec2 180 -50
+      , Vec2.vec2 80 -80
+      , Vec2.vec2 50 -180
       ]
-         |> Collision2D.fromVectors
   in
     { terrain = Bicubic.withRange start end data
     , mass = 1
@@ -76,5 +76,6 @@ initData =
     , continue = False
     , cursor = (0, 0)
     , tokens = [ Vec2.vec2 170 -190, Vec2.vec2 30 30 ]
+    , launchHull = Collision2D.fromVectors launchZone
     , launchZone = launchZone
     }
