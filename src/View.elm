@@ -10,7 +10,6 @@ import Collision2D
 import Math.Vector2 as Vec2 exposing (Vec2)
 
 import Types exposing (..)
-import Geometry exposing (fromCursor)
 
 
 view : Model -> Element
@@ -25,8 +24,8 @@ readyView : Data -> Element
 readyView data =
   let
     position =
-      fromCursor data.cursor
-
+      cursorVec data
+                
     cursor =
       if Collision2D.isInside position data.launchHull
       then crosshair
@@ -44,7 +43,7 @@ aimView : Data -> Element
 aimView data =
   let
     direction =
-      Vec2.sub (fromCursor data.cursor) data.position
+      Vec2.sub (cursorVec data) data.position
 
     angle =
       atan2 (Vec2.getY direction) (Vec2.getX direction)

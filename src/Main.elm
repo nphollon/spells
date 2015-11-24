@@ -38,44 +38,57 @@ inputs =
 init : Model
 init =
   { mode = Ready
-  , data = initData
+  , data = initData levelOne
   }
 
           
-initData : Data
-initData =
+initData : Level -> Data
+initData level =
   let
-    data =
+    terrain =
+      Bicubic.rows level.knots
+        |> Maybe.withDefault Bicubic.emptyData
+        |> Bicubic.withRange
+           (Vec2.toRecord level.start)
+           (Vec2.toRecord level.end)
+  in
+    { continue = False
+
+    , mass = 1
+    , g = -5000
+    , position = Vec2.vec2 0 0
+    , momentum = Vec2.vec2 0 0
+    , cursor = (-100, -100)
+
+    , terrain = terrain
+    , tokens = level.tokens
+    , launchHull = Collision2D.fromVectors level.launchZone
+    , launchZone = level.launchZone
+    }
+
+  
+levelOne : Level
+levelOne =
+  { knots =
       [ [ 5, 5, 5, 5, 5 ]
       , [ 5, 2, 2, 4, 5 ]
       , [ 5, 1, 0, 1, 5 ]
       , [ 5, 1, 1, 3, 5 ]
       , [ 5, 5, 5, 5, 5 ]
       ]
-         |> Bicubic.rows
-         |> Maybe.withDefault Bicubic.emptyData
-
-    start =
-      { x = -200, y = -200 }
-
-    end =
-      { x = 200, y = 200 }
-
-    launchZone =
+    
+  , start = Vec2.vec2 -200 -200
+  , end = Vec2.vec2 200 200
+          
+  , launchZone =
       [ Vec2.vec2 180 -180
       , Vec2.vec2 180 -50
       , Vec2.vec2 80 -80
       , Vec2.vec2 50 -180
       ]
-  in
-    { terrain = Bicubic.withRange start end data
-    , mass = 1
-    , g = -5000
-    , position = Vec2.vec2 100 -100
-    , momentum = Vec2.vec2 0 0
-    , continue = False
-    , cursor = (0, 0)
-    , tokens = [ Vec2.vec2 170 -190, Vec2.vec2 30 30 ]
-    , launchHull = Collision2D.fromVectors launchZone
-    , launchZone = launchZone
-    }
+
+  , tokens =
+      [ Vec2.vec2 170 -190
+      , Vec2.vec2 30 30
+      ]
+  }

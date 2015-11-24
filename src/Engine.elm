@@ -5,7 +5,6 @@ import Math.Vector2 as Vec2
 import Types exposing (..)
 import TimeEvolution
 import Interpolate.Bicubic as Bicubic
-import Geometry exposing (fromCursor)
 import Collision2D
 
 
@@ -54,21 +53,23 @@ readyEngine =
           { data | cursor <- cursor }
 
         Click ->
-          { data | continue <-
-                     Collision2D.isInside
-                                  (fromCursor data.cursor) data.launchHull
-          }
+          { data | continue <- canLaunch data }
 
   , transition data =
       if data.continue then Just Aim else Nothing
   }
 
 
+canLaunch : Data -> Bool
+canLaunch data =
+  Collision2D.isInside (cursorVec data) data.launchHull
+
+
 aimEngine : Engine
 aimEngine =
   { init data =
       { data | continue <- False
-             , position <- fromCursor data.cursor
+             , position <- cursorVec data
       }
 
   , update input data =
@@ -92,7 +93,7 @@ fireEngine =
   { init data =
       { data | continue <- False
              , momentum <-
-                 Vec2.direction (fromCursor data.cursor) data.position
+                 Vec2.direction (cursorVec data) data.position
                    |> Vec2.scale 100
       }
            
