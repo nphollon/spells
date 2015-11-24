@@ -1,8 +1,14 @@
-module Update where
+module Types where
 
 import Time exposing (Time)
 import Interpolate.Bicubic exposing (Spline)
 import Math.Vector2 exposing (Vec2)
+
+
+type alias Model =
+  { mode : Mode
+  , data : Data
+  }
 
 
 type Update =
