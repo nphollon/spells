@@ -34,7 +34,8 @@ readyView data =
         
   in
     onGrid data.terrain
-             [ drawTokens data.tokens
+             [ launchZone
+             , drawTokens data.tokens
              , Collage.move (Vec2.toTuple position) cursor
              ]
 
@@ -81,8 +82,9 @@ onGrid terrain items =
       Vec2.vec2 (toCoord i resX scrX) (toCoord j resY scrY)
 
     gradient pos =
-      Color.radial (0,0) 7 (0,0) (1 * scrX / resX)
-             [ (0, Color.hsla 0 0 (level pos terrain) 1)
+      Color.radial (0,0) 0 (0,0) (1 * scrX / resX)
+             [ (0, Color.hsla 0 0 (level pos terrain) 0.9)
+             , (0.3, Color.hsla 0 0 (level pos terrain) 0.8)
              , (1, Color.hsla 0 0 (level pos terrain) 0)
              ]
 
@@ -154,3 +156,10 @@ stopSign =
   ]
   |> Collage.polygon
   |> Collage.filled Color.darkRed
+
+
+launchZone : Collage.Form
+launchZone =
+  [ (-250, 250), (-250, -250), (0, 0) ]
+    |> Collage.polygon
+    |> Collage.filled (Color.rgba 255 255 100 0.5)
