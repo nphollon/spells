@@ -6,6 +6,7 @@ import Types exposing (..)
 import TimeEvolution
 import Interpolate.Bicubic as Bicubic
 import Geometry exposing (fromCursor)
+import Collision2D
 
 
 update : Update -> Model -> Model
@@ -53,7 +54,10 @@ readyEngine =
           { data | cursor <- cursor }
 
         Click ->
-          { data | continue <- True }
+          { data | continue <-
+                     Collision2D.isInside
+                                  (fromCursor data.cursor) data.launchZone
+          }
 
   , transition data =
       if data.continue then Just Aim else Nothing
