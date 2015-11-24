@@ -20,6 +20,7 @@ type alias Data =
   , mass : Float
   , g : Float
   , cursor : (Int, Int)
+  , tokens : List Vec2
   , continue : Bool
   }
 

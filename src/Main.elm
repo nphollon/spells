@@ -76,6 +76,7 @@ initData =
     , momentum = Vec2.vec2 0 0
     , continue = False
     , cursor = (0, 0)
+    , tokens = [ Vec2.vec2 170 -190, Vec2.vec2 30 30 ]
     }
 
 
@@ -226,18 +227,12 @@ readyView data =
   let
     position =
       fromCursor data.cursor |> Vec2.toTuple
-      
-    crosshair =
-      [ (3, 0), (10, 10)
-      , (0, 3), (-10, 10)
-      , (-3, 0), (-10, -10)
-      , (0, -3), (10, -10)
-      ]
-         |> Collage.polygon
-         |> Collage.filled Color.yellow
-         |> Collage.move position
   in
-    onGrid data.terrain [ crosshair ]
+    onGrid data.terrain
+             [ drawTokens data.tokens
+             , crosshair
+                 |> Collage.move position
+             ]
 
 
 aimView : Data -> Element.Element
@@ -248,17 +243,13 @@ aimView data =
 
     angle =
       atan2 (Vec2.getY direction) (Vec2.getX direction)
-            
-    pointer =
-      [ (0, 0), (-25, 3)
-      , (-30, 0), (-25, -3)
-      ]
-        |> Collage.polygon
-        |> Collage.filled Color.darkYellow
-        |> Collage.rotate angle
-        |> Collage.move (Vec2.toTuple data.position)
   in
-    onGrid data.terrain [ pointer ]
+    onGrid data.terrain
+             [ drawTokens data.tokens
+             , pointer
+                 |> Collage.rotate angle
+                 |> Collage.move (Vec2.toTuple data.position)
+             ]
 
            
 fromCursor : (Int, Int) -> Vec2
@@ -268,13 +259,11 @@ fromCursor (x, y) =
              
 fireView : Data -> Element.Element
 fireView data =
-  let
-    ball =
-      Collage.circle 5
-        |> Collage.filled Color.red
-        |> Collage.move (Vec2.toTuple data.position)
-  in
-    onGrid data.terrain [ ball ]
+  onGrid data.terrain
+           [ ball
+               |> Collage.move (Vec2.toTuple data.position)
+           , drawTokens data.tokens
+           ]
 
 
 onGrid : Bicubic.Spline -> List Collage.Form -> Element.Element
@@ -319,3 +308,39 @@ onGrid terrain items =
     |> flip List.append items
     |> Collage.collage 500 500
     
+
+ball : Collage.Form
+ball =
+  Collage.circle 5 |> Collage.filled Color.red
+
+
+pointer : Collage.Form
+pointer =
+  [ (0, 0), (-25, 3)
+  , (-30, 0), (-25, -3)
+  ]
+  |> Collage.polygon
+  |> Collage.filled Color.darkYellow
+    
+
+crosshair : Collage.Form
+crosshair =
+  [ (3, 0), (10, 10)
+  , (0, 3), (-10, 10)
+  , (-3, 0), (-10, -10)
+  , (0, -3), (10, -10)
+  ]
+  |> Collage.polygon
+  |> Collage.filled Color.yellow
+            
+
+drawTokens : List Vec2 -> Collage.Form
+drawTokens =
+  let
+    drawToken position =
+      [ (10, 0), (0, 10), (-10, 0), (0, -10) ]
+        |> Collage.polygon
+        |> Collage.filled Color.blue
+        |> Collage.move (Vec2.toTuple position)
+    in
+      List.map drawToken >> Collage.group
