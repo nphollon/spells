@@ -29,18 +29,18 @@ type alias Data =
   , position : Vec2
   , momentum : Vec2
   , cursor : (Int, Int)
+  , tokens : List Vec2
 
+  , size : Vec2
   , terrain : Spline
   , launchHull : Hull
   , launchZone : List Vec2
-  , tokens : List Vec2
   }
 
                 
 type alias Level =
   { knots : List (List Float)
-  , start : Vec2
-  , end : Vec2
+  , size : Vec2
   , launchZone : List Vec2
   , tokens : List Vec2
   }
@@ -56,7 +56,11 @@ type alias Engine =
 cursorVec : Data -> Vec2
 cursorVec data =
   let
-    (x, y) = data.cursor
+    (x, y) =
+      data.cursor
+
+    scr =
+      Vec2.toRecord data.size
   in
-    Vec2.vec2 (toFloat x - 250) (250 - toFloat y)
+    Vec2.vec2 (toFloat x - 0.5 * scr.x) (0.5 * scr.y - toFloat y)
 

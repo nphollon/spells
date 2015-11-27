@@ -49,8 +49,8 @@ initData level =
       Bicubic.rows level.knots
         |> Maybe.withDefault Bicubic.emptyData
         |> Bicubic.withRange
-           (Vec2.toRecord level.start)
-           (Vec2.toRecord level.end)
+           (Vec2.toRecord (Vec2.scale -0.5 level.size))
+           (Vec2.toRecord (Vec2.scale 0.5 level.size))
   in
     { continue = False
 
@@ -60,6 +60,7 @@ initData level =
     , momentum = Vec2.vec2 0 0
     , cursor = (-100, -100)
 
+    , size = level.size
     , terrain = terrain
     , tokens = level.tokens
     , launchHull = Collision2D.fromVectors level.launchZone
@@ -77,8 +78,7 @@ levelOne =
       , [ 5, 5, 5, 5, 5 ]
       ]
     
-  , start = Vec2.vec2 -200 -200
-  , end = Vec2.vec2 200 200
+  , size = Vec2.vec2 400 400
           
   , launchZone =
       [ Vec2.vec2 180 -180

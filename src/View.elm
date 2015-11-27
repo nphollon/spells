@@ -32,7 +32,7 @@ readyView data =
       else stopSign
         
   in
-    onGrid data.terrain
+    onGrid data.size data.terrain
              [ launchZone data.launchZone
              , drawTokens data.tokens
              , Collage.move (Vec2.toTuple position) cursor
@@ -48,7 +48,7 @@ aimView data =
     angle =
       atan2 (Vec2.getY direction) (Vec2.getX direction)
   in
-    onGrid data.terrain
+    onGrid data.size data.terrain
              [ drawTokens data.tokens
              , pointer
                  |> Collage.rotate angle
@@ -58,30 +58,29 @@ aimView data =
            
 fireView : Data -> Element
 fireView data =
-  onGrid data.terrain
+  onGrid data.size data.terrain
            [ ball
                |> Collage.move (Vec2.toTuple data.position)
            , drawTokens data.tokens
            ]
 
 
-onGrid : Bicubic.Spline -> List Collage.Form -> Element
-onGrid terrain items =
+onGrid : Vec2 -> Bicubic.Spline -> List Collage.Form -> Element
+onGrid size terrain items =
   let
     resX = 12
     resY = 12
 
-    scrX = 400
-    scrY = 400
+    scr = Vec2.toRecord size
       
     toCoord index arrayLength screenLength =
       ((toFloat index) / arrayLength - 0.5) * screenLength
       
     pos i j =
-      Vec2.vec2 (toCoord i resX scrX) (toCoord j resY scrY)
+      Vec2.vec2 (toCoord i resX scr.x) (toCoord j resY scr.y)
 
     gradient pos =
-      Color.radial (0,0) 0 (0,0) (1 * scrX / resX)
+      Color.radial (0,0) 0 (0,0) (1 * scr.x / resX)
              [ (0, Color.hsla 0 0 (level pos terrain) 0.9)
              , (0.3, Color.hsla 0 0 (level pos terrain) 0.8)
              , (1, Color.hsla 0 0 (level pos terrain) 0)
@@ -92,7 +91,7 @@ onGrid terrain items =
         |> (\f -> f / 7)
 
     point pos =
-      Collage.rect (2 * scrX / resX) (2 * scrY / resY)
+      Collage.rect (2 * scr.x / resX) (2 * scr.y / resY)
         |> Collage.gradient (gradient pos)
         |> Collage.move (Vec2.toTuple pos)
 
@@ -106,7 +105,7 @@ onGrid terrain items =
     initialize2D (1 + round resX) (1 + round resY) (\i j -> point (pos i j))
     |> flatten
     |> flip List.append items
-    |> Collage.collage 500 500
+    |> Collage.collage (round scr.x) (round scr.y)
     
 
 ball : Collage.Form
