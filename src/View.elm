@@ -15,9 +15,16 @@ import Types exposing (..)
 view : Model -> Element
 view model =
   case model.mode of
+    Start -> startView model.data
     Ready -> readyView model.data
     Aim -> aimView model.data
     Fire -> fireView model.data
+
+
+startView : Data -> Element
+startView data =
+  Element.image 240 150 "/img/book.svg"
+    |> Element.container 400 400 Element.middle 
 
 
 readyView : Data -> Element
@@ -137,7 +144,7 @@ drawTokens : List Vec2 -> Collage.Form
 drawTokens =
   let
     drawToken position =
-      Element.image 20 20 "/star.png"
+      Element.image 20 20 "/img/star.png"
         |> Collage.toForm
         |> Collage.move (Vec2.toTuple position)
     in

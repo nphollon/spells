@@ -33,9 +33,31 @@ update up model =
 chooseEngine : Mode -> Engine
 chooseEngine mode =
   case mode of
+    Start -> startEngine
     Ready -> readyEngine
     Aim -> aimEngine
     Fire -> fireEngine
+
+
+startEngine : Engine
+startEngine =
+  { init data =
+      { data | continue <- False
+      }
+      
+  , update input data =
+      case input of
+        FPS _ ->
+          data
+
+        MouseAt _ ->
+          data
+
+        Click ->
+          { data | continue <- True }
+  , transition data =
+      if data.continue then Just Ready else Nothing
+  }
 
 
 readyEngine : Engine

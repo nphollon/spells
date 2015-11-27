@@ -37,7 +37,7 @@ inputs =
 
 init : Model
 init =
-  { mode = Ready
+  { mode = Start
   , data = initData levelOne
   }
 
