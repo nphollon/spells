@@ -137,9 +137,8 @@ drawTokens : List Vec2 -> Collage.Form
 drawTokens =
   let
     drawToken position =
-      [ (10, 0), (0, 10), (-10, 0), (0, -10) ]
-        |> Collage.polygon
-        |> Collage.filled Color.blue
+      Element.image 20 20 "/star.png"
+        |> Collage.toForm
         |> Collage.move (Vec2.toTuple position)
     in
       List.map drawToken >> Collage.group
