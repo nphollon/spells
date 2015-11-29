@@ -23,7 +23,7 @@ view model =
 
 startView : Data -> Element
 startView data =
-  Element.image 240 150 "/img/book.svg"
+  Element.image 235 110 "/img/book.svg"
     |> Element.container 400 400 Element.middle 
 
 
