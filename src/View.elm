@@ -23,8 +23,25 @@ view model =
 
 startView : Data -> Element
 startView data =
-  Element.image 235 110 "/img/book.svg"
-    |> Element.container 400 400 Element.middle 
+  let
+    bookHull =
+      [ Vec2.vec2 0 140
+      , Vec2.vec2 500 140
+      , Vec2.vec2 500 360
+      , Vec2.vec2 0 360
+      ] |> Collision2D.fromVectors
+
+    cursor =
+      Vec2.vec2 (toFloat (fst data.cursor)) (toFloat (snd data.cursor))
+                              
+    imageSource =
+      if Collision2D.isInside cursor bookHull then
+        "/img/open_book.svg"
+      else
+        "/img/closed_book.svg"
+  in
+    Element.image 470 220 imageSource
+      |> Element.container 500 500 Element.middle 
 
 
 readyView : Data -> Element

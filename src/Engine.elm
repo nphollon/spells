@@ -50,8 +50,8 @@ startEngine =
         FPS _ ->
           data
 
-        MouseAt _ ->
-          data
+        MouseAt cursor ->
+          { data | cursor <- cursor }
 
         Click ->
           { data | continue <- True }
