@@ -122,7 +122,7 @@ fireEngine =
   , update = \input data ->
       case input of
         FPS dt ->
-          TimeEvolution.rungeKutta laws dt data
+          TimeEvolution.evolve laws dt data
             |> checkCollisions
 
         MouseAt cursor ->
