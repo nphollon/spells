@@ -7,6 +7,8 @@ import TimeEvolution
 import Interpolate.Bicubic as Bicubic
 import Collision2D
 
+import Menu
+
 
 update : Update -> Model -> Model
 update up model =
@@ -33,31 +35,10 @@ update up model =
 chooseEngine : Mode -> Engine
 chooseEngine mode =
   case mode of
-    Start -> startEngine
+    Start -> Menu.engine
     Ready -> readyEngine
     Aim -> aimEngine
     Fire -> fireEngine
-
-
-startEngine : Engine
-startEngine =
-  { init = \data ->
-      { data | continue = False
-      }
-      
-  , update = \input data ->
-      case input of
-        FPS _ ->
-          data
-
-        MouseAt cursor ->
-          { data | cursor = cursor }
-
-        Click ->
-          { data | continue = True }
-  , transition = \data ->
-      if data.continue then Just Ready else Nothing
-  }
 
 
 readyEngine : Engine

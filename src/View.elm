@@ -10,38 +10,15 @@ import Collision2D
 import Math.Vector2 as Vec2 exposing (Vec2)
 
 import Types exposing (..)
-
+import Menu
 
 view : Model -> Element
 view model =
   case model.mode of
-    Start -> startView model.data
+    Start -> Menu.view model.data
     Ready -> readyView model.data
     Aim -> aimView model.data
     Fire -> fireView model.data
-
-
-startView : Data -> Element
-startView data =
-  let
-    bookHull =
-      [ Vec2.vec2 0 140
-      , Vec2.vec2 500 140
-      , Vec2.vec2 500 360
-      , Vec2.vec2 0 360
-      ] |> Collision2D.fromVectors
-
-    cursor =
-      Vec2.vec2 (toFloat (fst data.cursor)) (toFloat (snd data.cursor))
-                              
-    imageSource =
-      if Collision2D.isInside cursor bookHull then
-        "/img/open_book.svg"
-      else
-        "/img/closed_book.svg"
-  in
-    Element.image 470 220 imageSource
-      |> Element.container 500 500 Element.middle 
 
 
 readyView : Data -> Element
