@@ -22,7 +22,7 @@ update up model =
   in
     case transition of
       Nothing ->
-        { model | data <- data }
+        { model | data = data }
 
       Just mode ->
         { mode = mode
@@ -41,43 +41,43 @@ chooseEngine mode =
 
 startEngine : Engine
 startEngine =
-  { init data =
-      { data | continue <- False
+  { init = \data ->
+      { data | continue = False
       }
       
-  , update input data =
+  , update = \input data ->
       case input of
         FPS _ ->
           data
 
         MouseAt cursor ->
-          { data | cursor <- cursor }
+          { data | cursor = cursor }
 
         Click ->
-          { data | continue <- True }
-  , transition data =
+          { data | continue = True }
+  , transition = \data ->
       if data.continue then Just Ready else Nothing
   }
 
 
 readyEngine : Engine
 readyEngine =
-  { init data =
-      { data | continue <- False
+  { init = \data ->
+      { data | continue = False
       }
            
-  , update input data =
+  , update = \input data ->
       case input of
         FPS _ ->
           data
           
         MouseAt cursor ->
-          { data | cursor <- cursor }
+          { data | cursor = cursor }
 
         Click ->
-          { data | continue <- canLaunch data }
+          { data | continue = canLaunch data }
 
-  , transition data =
+  , transition = \data ->
       if data.continue then Just Aim else Nothing
   }
 
@@ -89,66 +89,66 @@ canLaunch data =
 
 aimEngine : Engine
 aimEngine =
-  { init data =
-      { data | continue <- False
-             , position <- cursorVec data
+  { init = \data ->
+      { data | continue = False
+             , position = cursorVec data
       }
 
-  , update input data =
+  , update = \input data ->
       case input of
         FPS _ ->
           data
 
         MouseAt cursor ->
-          { data | cursor <- cursor }
+          { data | cursor = cursor }
 
         Click ->
-          { data | continue <- True }
+          { data | continue = True }
 
-  , transition data =
+  , transition = \data ->
       if data.continue then Just Fire else Nothing
   }
                
 
 fireEngine : Engine
 fireEngine =
-  { init data =
-      { data | continue <- False
-             , momentum <-
+  { init = \data ->
+      { data | continue = False
+             , momentum =
                  Vec2.direction (cursorVec data) data.position
                    |> Vec2.scale 100
       }
            
-  , update input data =
+  , update = \input data ->
       case input of
         FPS dt ->
           TimeEvolution.rungeKutta laws dt data
             |> checkCollisions
 
         MouseAt cursor ->
-          { data | cursor <- cursor }
+          { data | cursor = cursor }
 
         Click ->
-          { data | continue <- True }
+          { data | continue = True }
 
-  , transition data =
+  , transition = \data ->
       if data.continue then Just Ready else Nothing
   }
 
 
 laws : TimeEvolution.Laws Data
 laws =
-  { add a b =
-      { a | position <- Vec2.add a.position b.position
-          , momentum <- Vec2.add a.momentum b.momentum
+  { add = \a b ->
+      { a | position = Vec2.add a.position b.position
+          , momentum = Vec2.add a.momentum b.momentum
       }
     
-  , scale f a =
-      { a | position <- Vec2.scale f a.position
-          , momentum <- Vec2.scale f a.momentum
+  , scale = \f a ->
+      { a | position = Vec2.scale f a.position
+          , momentum = Vec2.scale f a.momentum
       }
 
-  , force model =
+  , force = \model ->
       let
         gradient =
           Bicubic.gradientAt (Vec2.toRecord model.position) model.terrain
@@ -158,9 +158,9 @@ laws =
           1 / sqrt (1 + Vec2.lengthSquared gradient)
 
       in
-        { model | position <-
+        { model | position =
                     Vec2.scale (discr / model.mass) model.momentum
-                , momentum <-
+                , momentum =
                     Vec2.scale (model.mass * model.g * discr) gradient
         }
   }
@@ -172,6 +172,6 @@ checkCollisions data =
     doesRemain token =
       Vec2.distance data.position token > 10
   in
-    { data | tokens <-
+    { data | tokens =
              List.filter doesRemain data.tokens
     }
