@@ -39,7 +39,7 @@ view data =
   in
     [ bookIcon, handIcon ]
     |> List.map (drawIcon data.cursor)
-    |> List.map2 placeAt [(0, 100), (500, 100)]
+    |> List.map2 placeAt [(10, 220), (450, 20)]
     |> Element.flow Element.outward
 
 
@@ -47,10 +47,10 @@ bookIcon : Icon
 bookIcon =
   let
     hull =
-      [ Vec2.vec2 0 100
-      , Vec2.vec2 470 100
-      , Vec2.vec2 470 320
-      , Vec2.vec2 0 320
+      [ Vec2.vec2 0 0
+      , Vec2.vec2 450 0
+      , Vec2.vec2 450 800
+      , Vec2.vec2 0 800
       ]
   in
     icon hull 470 220 "open_book.svg" "closed_book.svg"
@@ -60,13 +60,13 @@ handIcon : Icon
 handIcon =
   let
     hull =
-      [ Vec2.vec2 500 100
-      , Vec2.vec2 737 100
-      , Vec2.vec2 737 340
-      , Vec2.vec2 500 340
+      [ Vec2.vec2 450 0
+      , Vec2.vec2 800 0
+      , Vec2.vec2 800 800
+      , Vec2.vec2 450 800
       ]
   in
-    icon hull 237 240 "open_hand.svg" "resting_fist.svg"
+    icon hull 237 420 "open_hand.svg" "resting_fist.svg"
 
       
 icon : List Vec2 -> Int -> Int -> String -> String -> Icon
