@@ -65,6 +65,8 @@ initData level =
     , tokens = level.tokens
     , launchHull = Collision2D.fromVectors level.launchZone
     , launchZone = level.launchZone
+    , image =
+       Element.image (round (Vec2.getX level.size)) (round (Vec2.getY level.size)) level.image
     }
 
   
@@ -91,4 +93,6 @@ levelOne =
       [ Vec2.vec2 170 -190
       , Vec2.vec2 30 30
       ]
+
+  , image = "/img/level_1.png"
   }

@@ -1,5 +1,6 @@
 module Types where
 
+import Graphics.Element exposing (Element)
 import Time exposing (Time)
 import Interpolate.Bicubic exposing (Spline)
 import Math.Vector2 as Vec2 exposing (Vec2)
@@ -35,6 +36,7 @@ type alias Data =
   , terrain : Spline
   , launchHull : Hull
   , launchZone : List Vec2
+  , image : Element
   }
 
                 
@@ -43,6 +45,7 @@ type alias Level =
   , size : Vec2
   , launchZone : List Vec2
   , tokens : List Vec2
+  , image : String 
   }
 
 

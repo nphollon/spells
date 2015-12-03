@@ -33,7 +33,7 @@ readyView data =
       else stopSign
         
   in
-    onGrid data.size data.terrain
+    onGrid data.size data.image
              [ launchZone data.launchZone
              , drawTokens data.tokens
              , Collage.move (Vec2.toTuple position) cursor
@@ -49,7 +49,7 @@ aimView data =
     angle =
       atan2 (Vec2.getY direction) (Vec2.getX direction)
   in
-    onGrid data.size data.terrain
+    onGrid data.size data.image
              [ drawTokens data.tokens
              , pointer
                  |> Collage.rotate angle
@@ -59,54 +59,24 @@ aimView data =
            
 fireView : Data -> Element
 fireView data =
-  onGrid data.size data.terrain
+  onGrid data.size data.image
            [ ball
                |> Collage.move (Vec2.toTuple data.position)
            , drawTokens data.tokens
            ]
 
 
-onGrid : Vec2 -> Bicubic.Spline -> List Collage.Form -> Element
-onGrid size terrain items =
+onGrid : Vec2 -> Element -> List Collage.Form -> Element
+onGrid size image items =
   let
-    resX = 12
-    resY = 12
-
     scr = Vec2.toRecord size
-      
-    toCoord index arrayLength screenLength =
-      ((toFloat index) / arrayLength - 0.5) * screenLength
-      
-    pos i j =
-      Vec2.vec2 (toCoord i resX scr.x) (toCoord j resY scr.y)
-
-    gradient pos =
-      Color.radial (0,0) 0 (0,0) (1 * scr.x / resX)
-             [ (0, Color.hsla 0 0 (level pos terrain) 0.9)
-             , (0.3, Color.hsla 0 0 (level pos terrain) 0.8)
-             , (1, Color.hsla 0 0 (level pos terrain) 0)
-             ]
-
-    level pos spline =
-      Bicubic.valueAt (Vec2.toRecord pos) spline
-        |> (\f -> f / 7)
-
-    point pos =
-      Collage.rect (2 * scr.x / resX) (2 * scr.y / resY)
-        |> Collage.gradient (gradient pos)
-        |> Collage.move (Vec2.toTuple pos)
-
-    flatten =
-      Array.map Array.toList >> Array.toList >> List.concat
-
-    initialize2D m n f =
-      Array.initialize m (\i -> Array.initialize n (f i))
-           
+    width = round scr.x
+    height = round scr.y
   in
-    initialize2D (1 + round resX) (1 + round resY) (\i j -> point (pos i j))
-    |> flatten
-    |> flip List.append items
-    |> Collage.collage (round scr.x) (round scr.y)
+    Element.flow Element.inward
+           [ (Collage.collage width height items)
+           , image
+           ]
     
 
 ball : Collage.Form
