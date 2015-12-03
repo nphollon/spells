@@ -7,35 +7,49 @@ import Array
 import Interpolate.Bicubic as Bicubic
 import Math.Vector2 as Vec2
 
+import Levels
+import Point
+
+
+level =
+  Levels.levelOne
+        
 main =
   let
-    resX = 1000
-    resY = 500
+    res =
+      scr--      (250, 125)
 
     scr =
-      { x = 1000, y = 500 }
+      (1000, 500)
+
+    pixel =
+      Point.map2 (\r s -> 2 * s / r) res scr
+        |> uncurry Collage.rect
       
     toCoord index arrayLength screenLength =
       ((toFloat index) / arrayLength - 0.5) * screenLength
       
-    pos i j =
-      Vec2.vec2 (toCoord i resX scr.x) (toCoord j resY scr.y)
+    positionOf index =
+      Point.map3 toCoord index res scr
 
-    point pos =
-      Collage.rect (2 * scr.x / resX) (2 * scr.y / resY)
-        |> Collage.filled (color (value pos))
-        |> Collage.move (Vec2.toTuple pos)
+    drawPoint pos =
+      Collage.filled (color (value pos)) pixel
+        |> Collage.move pos
 
-    flatten =
-      Array.map Array.toList >> Array.toList >> List.concat
+    flatten arrayArray =
+      Array.map Array.toList arrayArray
+        |> Array.toList
+        |> List.concat
 
-    initialize2D m n f =
-      Array.initialize m (\i -> Array.initialize n (f i))
+    grid (m, n) =
+      Array.initialize m (\i -> Array.initialize n ((,) i))
            
   in
-    initialize2D (1 + round resX) (1 + round resY) (\i j -> point (pos i j))
+    Point.map ((+) 1) res
+    |> grid
     |> flatten
-    |> Collage.collage (round scr.x) (round scr.y)
+    |> List.map (positionOf >> drawPoint)
+    |> uncurry Collage.collage (Point.map round scr)
 
 
 color a =
@@ -44,9 +58,9 @@ color a =
          (1 - a)
          0.5
 
-       
+          
 value pos =
-  Bicubic.valueAt (Vec2.toRecord pos) terrain
+  Bicubic.valueAt (Point.toRecord pos) terrain
     |> (\f -> (toFloat (round (2*f))) / 16)
        
 
@@ -56,17 +70,3 @@ terrain =
     |> Bicubic.withRange
        (Vec2.toRecord (Vec2.scale -0.5 level.size))
        (Vec2.toRecord (Vec2.scale 0.5 level.size))
-
-         
-level =
-  { knots =
-      [ [ 7, 8, 9, 9, 9, 9, 9, 9, 9, 9 ]
-      , [ 7, 6, 2, 3, 1, 0, 0, 0, 3, 9 ]
-      , [ 7, 6, 0, 1, 0, 2, 4, 5, 1, 9 ]
-      , [ 7, 6, 1, 3, 1, 2, 4, 5, 3, 9 ]
-      , [ 7, 8, 9, 9, 9, 9, 9, 9, 9, 9 ]
-      ]
-    
-  , size =
-      Vec2.vec2 1000 500
-  }

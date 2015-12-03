@@ -130,4 +130,4 @@ launchZone : List Vec2 -> Collage.Form
 launchZone vertexes =
   List.map Vec2.toTuple vertexes
     |> Collage.polygon
-    |> Collage.filled (Color.rgba 255 255 100 0.5)
+    |> Collage.filled (Color.rgba 255 255 100 0.25)

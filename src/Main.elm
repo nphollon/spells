@@ -10,6 +10,7 @@ import Collision2D
 
 import Engine
 import View
+import Levels
 import Types exposing (..)
 
 
@@ -38,7 +39,7 @@ inputs =
 init : Model
 init =
   { mode = Start
-  , data = initData levelOne
+  , data = initData Levels.levelOne
   }
 
           
@@ -68,31 +69,3 @@ initData level =
     , image =
        Element.image (round (Vec2.getX level.size)) (round (Vec2.getY level.size)) level.image
     }
-
-  
-levelOne : Level
-levelOne =
-  { knots =
-      [ [ 7, 8, 9, 9, 9, 9, 9, 9, 9, 9 ]
-      , [ 7, 6, 2, 3, 1, 0, 0, 0, 3, 9 ]
-      , [ 7, 6, 0, 1, 0, 2, 4, 5, 1, 9 ]
-      , [ 7, 6, 1, 3, 1, 2, 4, 5, 3, 9 ]
-      , [ 7, 8, 9, 9, 9, 9, 9, 9, 9, 9 ]
-      ]
-    
-  , size = Vec2.vec2 1000 500
-          
-  , launchZone =
-      [ Vec2.vec2 -500 250
-      , Vec2.vec2 -500 -250
-      , Vec2.vec2 -300 -250
-      , Vec2.vec2 -300 250
-      ]
-
-  , tokens =
-      [ Vec2.vec2 170 -190
-      , Vec2.vec2 30 30
-      ]
-
-  , image = "/img/level_1.png"
-  }
