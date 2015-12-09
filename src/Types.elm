@@ -30,22 +30,18 @@ type alias Data =
   , position : Vec2
   , momentum : Vec2
   , cursor : (Int, Int)
-  , tokens : List Vec2
 
-  , size : Vec2
-  , terrain : Spline
-  , launchHull : Hull
-  , launchZone : List Vec2
-  , image : Element
+  , level : Level
   }
 
                 
 type alias Level =
-  { knots : List (List Float)
+  { terrain : Spline
   , size : Vec2
+  , launchHull : Hull
   , launchZone : List Vec2
   , tokens : List Vec2
-  , image : String 
+  , image : Element
   }
 
 
@@ -54,16 +50,3 @@ type alias Engine =
   , update : Update -> Data -> Data
   , transition : Data -> Maybe Mode
   }
-
-
-cursorVec : Data -> Vec2
-cursorVec data =
-  let
-    (x, y) =
-      data.cursor
-
-    scr =
-      Vec2.toRecord data.size
-  in
-    Vec2.vec2 (toFloat x - 0.5 * scr.x) (0.5 * scr.y - toFloat y)
-

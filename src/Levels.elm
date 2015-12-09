@@ -1,6 +1,9 @@
-module Levels where
+module Levels (levelOne) where
 
-import Math.Vector2 as Vec2
+import Math.Vector2 as Vec2 exposing (Vec2)
+import Interpolate.Bicubic as Bicubic exposing (Spline)
+import Collision2D
+import Graphics.Element as Element
 
 import Types exposing (..)
 
@@ -33,4 +36,43 @@ levelOne =
       ]
 
   , image = "/img/level_1.png"
+            
+  } |> buildLevel
+
+
+buildLevel : LevelParams -> Level
+buildLevel params =
+  { size =
+      params.size
+           
+  , terrain =
+      Bicubic.rows params.knots
+        |> Maybe.withDefault Bicubic.emptyData
+        |> Bicubic.withRange
+           (Vec2.toRecord (Vec2.scale -0.5 params.size))
+           (Vec2.toRecord (Vec2.scale 0.5 params.size))
+
+  , tokens =
+      params.tokens
+
+  , launchHull =
+      Collision2D.fromVectors params.launchZone
+
+  , launchZone =
+      params.launchZone
+
+  , image =
+      Element.image
+               (round (Vec2.getX params.size))
+               (round (Vec2.getY params.size))
+               params.image
+  }
+
+
+type alias LevelParams =
+  { knots : List (List Float)
+  , size : Vec2
+  , launchZone : List Vec2
+  , tokens : List Vec2
+  , image : String 
   }

@@ -45,27 +45,13 @@ init =
           
 initData : Level -> Data
 initData level =
-  let
-    terrain =
-      Bicubic.rows level.knots
-        |> Maybe.withDefault Bicubic.emptyData
-        |> Bicubic.withRange
-           (Vec2.toRecord (Vec2.scale -0.5 level.size))
-           (Vec2.toRecord (Vec2.scale 0.5 level.size))
-  in
-    { continue = False
+  { continue = False
+               
+  , mass = 1
+  , g = -5000
+  , position = Vec2.vec2 0 0
+  , momentum = Vec2.vec2 0 0
+  , cursor = (-100, -100)
 
-    , mass = 1
-    , g = -5000
-    , position = Vec2.vec2 0 0
-    , momentum = Vec2.vec2 0 0
-    , cursor = (-100, -100)
-
-    , size = level.size
-    , terrain = terrain
-    , tokens = level.tokens
-    , launchHull = Collision2D.fromVectors level.launchZone
-    , launchZone = level.launchZone
-    , image =
-       Element.image (round (Vec2.getX level.size)) (round (Vec2.getY level.size)) level.image
-    }
+  , level = level
+  }

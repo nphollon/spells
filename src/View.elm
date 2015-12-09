@@ -9,6 +9,7 @@ import Interpolate.Bicubic as Bicubic
 import Collision2D
 import Math.Vector2 as Vec2 exposing (Vec2)
 
+import Data
 import Types exposing (..)
 import Menu
 
@@ -24,58 +25,48 @@ view model =
 readyView : Data -> Element
 readyView data =
   let
-    position =
-      cursorVec data
-                
     cursor =
-      if Collision2D.isInside position data.launchHull
+      if Data.canLaunch data
       then crosshair
       else stopSign
         
   in
-    onGrid data.size data.image
-             [ launchZone data.launchZone
-             , drawTokens data.tokens
-             , Collage.move (Vec2.toTuple position) cursor
+    onGrid data.level
+             [ launchZone data.level.launchZone
+             , drawTokens data.level.tokens
+             , Collage.move (Vec2.toTuple (Data.cursorVec data)) cursor
              ]
 
 
 aimView : Data -> Element
 aimView data =
-  let
-    direction =
-      Vec2.sub (cursorVec data) data.position
-
-    angle =
-      atan2 (Vec2.getY direction) (Vec2.getX direction)
-  in
-    onGrid data.size data.image
-             [ drawTokens data.tokens
-             , pointer
-                 |> Collage.rotate angle
-                 |> Collage.move (Vec2.toTuple data.position)
-             ]
+  onGrid data.level
+           [ drawTokens data.level.tokens
+           , pointer
+             |> Collage.rotate (Data.cursorBearing data)
+             |> Collage.move (Vec2.toTuple data.position)
+           ]
 
            
 fireView : Data -> Element
 fireView data =
-  onGrid data.size data.image
+  onGrid data.level
            [ ball
                |> Collage.move (Vec2.toTuple data.position)
-           , drawTokens data.tokens
+           , drawTokens data.level.tokens
            ]
 
 
-onGrid : Vec2 -> Element -> List Collage.Form -> Element
-onGrid size image items =
+onGrid : Level -> List Collage.Form -> Element
+onGrid level items =
   let
-    scr = Vec2.toRecord size
+    scr = Vec2.toRecord level.size
     width = round scr.x
     height = round scr.y
   in
     Element.flow Element.inward
            [ (Collage.collage width height items)
-           , image
+           , level.image
            ]
     
 

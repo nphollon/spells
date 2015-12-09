@@ -2,12 +2,13 @@ module Engine (update) where
 
 import Math.Vector2 as Vec2
 
-import Types exposing (..)
 import TimeEvolution
 import Interpolate.Bicubic as Bicubic
 import Collision2D
 
 import Menu
+import Data
+import Types exposing (..)
 
 
 update : Update -> Model -> Model
@@ -56,23 +57,18 @@ readyEngine =
           { data | cursor = cursor }
 
         Click ->
-          { data | continue = canLaunch data }
+          { data | continue = Data.canLaunch data }
 
   , transition = \data ->
       if data.continue then Just Aim else Nothing
   }
 
 
-canLaunch : Data -> Bool
-canLaunch data =
-  Collision2D.isInside (cursorVec data) data.launchHull
-
-
 aimEngine : Engine
 aimEngine =
   { init = \data ->
       { data | continue = False
-             , position = cursorVec data
+             , position = Data.cursorVec data
       }
 
   , update = \input data ->
@@ -96,7 +92,7 @@ fireEngine =
   { init = \data ->
       { data | continue = False
              , momentum =
-                 Vec2.direction (cursorVec data) data.position
+                 Vec2.direction (Data.cursorVec data) data.position
                    |> Vec2.scale 100
       }
            
@@ -132,8 +128,7 @@ laws =
   , force = \model ->
       let
         gradient =
-          Bicubic.gradientAt (Vec2.toRecord model.position) model.terrain
-            |> Vec2.fromRecord
+          Data.gradient model
 
         discr =
           1 / sqrt (1 + Vec2.lengthSquared gradient)
@@ -152,7 +147,11 @@ checkCollisions data =
   let
     doesRemain token =
       Vec2.distance data.position token > 10
+
+    level = data.level
   in
-    { data | tokens =
-             List.filter doesRemain data.tokens
+    { data | level =
+             { level | tokens =
+                       List.filter doesRemain data.level.tokens
+             }
     }
