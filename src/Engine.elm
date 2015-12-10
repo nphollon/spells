@@ -145,13 +145,14 @@ laws =
 checkCollisions : Data -> Data
 checkCollisions data =
   let
-    doesRemain token =
-      Vec2.distance data.position token > 10
+    (remaining, collided) =
+      List.partition
+            (\token -> Vec2.distance data.position token > 13)
+            data.remainingTokens
 
-    level = data.level
+    score =
+      data.score + List.length collided
   in
-    { data | level =
-             { level | tokens =
-                       List.filter doesRemain data.level.tokens
-             }
+    { data | remainingTokens = remaining
+           , score = score
     }

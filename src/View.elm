@@ -4,6 +4,7 @@ import Array
 import Graphics.Element as Element exposing (Element)
 import Graphics.Collage as Collage
 import Color
+import Text
 
 import Interpolate.Bicubic as Bicubic
 import Collision2D
@@ -33,7 +34,7 @@ readyView data =
   in
     onGrid data.level
              [ launchZone data.level.launchZone
-             , drawTokens data.level.tokens
+             , drawTokens data.remainingTokens
              , Collage.move (Vec2.toTuple (Data.cursorVec data)) cursor
              ]
 
@@ -41,7 +42,7 @@ readyView data =
 aimView : Data -> Element
 aimView data =
   onGrid data.level
-           [ drawTokens data.level.tokens
+           [ drawTokens data.remainingTokens
            , pointer
              |> Collage.rotate (Data.cursorBearing data)
              |> Collage.move (Vec2.toTuple data.position)
@@ -50,12 +51,15 @@ aimView data =
            
 fireView : Data -> Element
 fireView data =
-  onGrid data.level
-           [ ball
-               |> Collage.move (Vec2.toTuple data.position)
-           , drawTokens data.level.tokens
-           ]
-
+  Element.flow Element.down
+         [ (onGrid data.level
+                   [ ball
+                       |> Collage.move (Vec2.toTuple data.position)
+                   , drawTokens data.remainingTokens
+                   ]
+           )
+         , Element.leftAligned (Text.fromString ("Score: " ++ toString data.score))
+         ]
 
 onGrid : Level -> List Collage.Form -> Element
 onGrid level items =
@@ -65,9 +69,9 @@ onGrid level items =
     height = round scr.y
   in
     Element.flow Element.inward
-           [ (Collage.collage width height items)
-           , level.image
-           ]
+             [ (Collage.collage width height items)
+             , level.image
+             ]
     
 
 ball : Collage.Form

@@ -48,10 +48,12 @@ initData level =
   { continue = False
                
   , mass = 1
-  , g = -5000
+  , g = -50000
   , position = Vec2.vec2 0 0
   , momentum = Vec2.vec2 0 0
   , cursor = (-100, -100)
+  , score = 0
+  , remainingTokens = level.tokens
 
   , level = level
   }

@@ -30,6 +30,8 @@ type alias Data =
   , position : Vec2
   , momentum : Vec2
   , cursor : (Int, Int)
+  , score : Int
+  , remainingTokens : List Vec2
 
   , level : Level
   }
